@@ -38,7 +38,7 @@
 
 .lobby-header h1 {
 	color: #fff;
-	font-family: 'Bowlby One SC', sans-serif;
+	font-family: var(--title-font);
 	font-size: clamp(2rem, 5vw, 3rem);
 	letter-spacing: 0;
 	line-height: 1;
@@ -64,10 +64,10 @@
 }
 
 .party-code {
-	background: var(--ink);
-	border-radius: 0.25rem;
-	color: var(--yellow);
-	font-family: 'Bowlby One SC', sans-serif;
+	background: #fff;
+	border-radius: 1.25rem;
+	color: var(--dark-blue);
+	font-family: var(--button-font);
 	font-size: 0.875rem;
 	font-weight: 700;
 	letter-spacing: .12em;
@@ -76,29 +76,30 @@
 
 .leave-button {
 	align-items: center;
-	background: var(--yellow);
+	background: #fff;
 	border: 0;
-	border-radius: 50%;
-	color: var(--ink);
+	border-radius: 0.625rem;
+	color: var(--dark-blue);
 	cursor: pointer;
 	display: flex;
 	font-size: 1.125rem;
 	gap: 0.1875rem;
-	height: 2.5625rem;
+	height: 2.75rem;
 	justify-content: center;
 	padding: 0;
 	position: relative;
 	transition: background .2s, transform .2s;
-	width: 2.5625rem;
+	width: 2.75rem;
 }
 
 .leave-button:hover {
-	background: #f7d65d;
+	background: #f1f1f1;
 	transform: translateY(-0.125rem);
 }
 
 
 .door-icon {
+	filter: invert(36%) sepia(8%) saturate(700%) hue-rotate(191deg) brightness(91%) contrast(86%);
 	height: 1.5rem;
 	position: absolute;
 	transition: opacity .2s ease;
@@ -160,7 +161,6 @@
 }
 
 .player-avatar {
-	border: 0.25rem solid var(--ink);
 	border-radius: 50%;
 	display: block;
 	height: 3.625rem;
@@ -169,7 +169,6 @@
 }
 
 .avatar-image {
-	animation: avatar-sway 3.8s ease-in-out infinite alternate;
 	border-radius: 50%;
 	display: block;
 	height: 100%;
@@ -177,28 +176,12 @@
 	width: 100%;
 }
 
-.player-row:nth-child(2) .avatar-image {
-	animation-delay: -0.8s;
-}
-
-.player-row:nth-child(3) .avatar-image {
-	animation-delay: -1.6s;
-}
-
-.player-row:nth-child(4) .avatar-image {
-	animation-delay: -2.4s;
-}
-
-.player-row:nth-child(5) .avatar-image {
-	animation-delay: -3.2s;
-}
-
 .crown {
 	height: 1.5rem;
-	left: 0.25rem;
+	right: -0.25rem;
 	position: absolute;
-	top: -1rem;
-	transform: rotate(-15deg);
+	top: -1.25rem;
+	transform: rotate(12deg);
 	width: 1.5rem;
 }
 
@@ -222,7 +205,7 @@
 
 .start-button {
 	align-items: center;
-	background: var(--red);
+	background: var(--dark-blue);
 	border: 0;
 	border-radius: 1.0625rem;
 	color: #fff;
@@ -238,7 +221,7 @@
 }
 
 .start-button:hover:not(:disabled) {
-	background: #e63b08;
+	background: #656978;
 	transform: translateY(-0.125rem);
 }
 
@@ -247,10 +230,9 @@
 	cursor: default;
 }
 
-.start-button span {
-	color: var(--yellow);
-	font-size: 1.25rem;
-	line-height: 0.75rem;
+.hunter-net-icon {
+	height: 1.25rem;
+	width: 1.25rem;
 }
 
 @keyframes appear {
@@ -262,22 +244,6 @@
 	to {
 		opacity: 1;
 		transform: translateY(0);
-	}
-}
-
-@keyframes avatar-sway {
-	from {
-		transform: rotate(-3deg);
-	}
-
-	to {
-		transform: rotate(3deg);
-	}
-}
-
-@media (prefers-reduced-motion: reduce) {
-	.avatar-image {
-		animation: none;
 	}
 }
 

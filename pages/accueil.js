@@ -13,13 +13,9 @@ export default function Accueil() {
 
                 {!mode && (
                     <div className="home-actions">
-                        <button className="home-button home-button-primary" onClick={() => setMode('create')}>
-                            Create a game
-                        </button>
+                        <button className="home-button home-button-primary" onClick={() => setMode('create')}>Create a game</button>
 
-                        <button className="home-button home-button-secondary" onClick={() => setMode('join')}>
-                            Join a game
-                        </button>
+                        <button className="home-button home-button-secondary" onClick={() => setMode('join')}>Join a game</button>
                     </div>
                 )}
 
@@ -29,9 +25,7 @@ export default function Accueil() {
 
                         <CreateParty />
 
-                        <button className="home-back-button" onClick={() => setMode(null)}>
-                            Back
-                        </button>
+                        <button className="home-back-button" onClick={() => setMode(null)}>Back</button>
                     </div>
                 )}
 
@@ -41,9 +35,7 @@ export default function Accueil() {
 
                         <JoinParty />
 
-                        <button className="home-back-button" onClick={() => setMode(null)}>
-                            Back
-                        </button>
+                        <button className="home-back-button" onClick={() => setMode(null)}>Back</button>
                     </div>
                 )}
             </section>

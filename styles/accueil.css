@@ -1,26 +1,25 @@
-.home-page {
+.home-page,
+.home-panel {
 	align-items: center;
 	background: var(--paper);
 	display: flex;
-	justify-content: center;
 	min-height: 100vh;
-	padding: 0;
+}
+
+.home-page {
+	justify-content: center;
 }
 
 .home-panel {
-	align-items: center;
-	background-color: var(--paper);
-	display: flex;
 	flex-direction: column;
 	justify-content: center;
-	min-height: 100vh;
 	padding: 3rem 2rem;
 	width: 100%;
 }
 
 .home-panel h1 {
 	color: #fff;
-	font-family: 'Bowlby One SC', sans-serif;
+	font-family: var(--title-font);
 	font-size: clamp(2rem, 8vw, 2.75rem);
 	letter-spacing: 0;
 	line-height: 1;
@@ -41,10 +40,12 @@
 }
 
 .home-button,
-.home-back-button {
+.home-back-button,
+.home-form-panel form button {
 	border: 0;
 	border-radius: 1.25rem;
 	cursor: pointer;
+	font-family: var(--button-font);
 	font-size: 0.875rem;
 	font-weight: 600;
 	padding: 0.7rem 1.1rem;
@@ -58,18 +59,18 @@
 }
 
 .home-button-primary {
-	background: var(--brown);
+	background: var(--dark-blue);
 	color: #fff;
 }
 
 .home-button-secondary {
-	background: var(--yellow);
-	color: var(--ink);
+	background: #fff;
+	color: var(--dark-blue);
 }
 
 .home-form-panel h2 {
 	color: #fff;
-	font-family: 'Bowlby One SC', sans-serif;
+	font-family: var(--title-font);
 	font-size: 1.25rem;
 	line-height: 1.1;
 	margin: 0 0 1.25rem;
@@ -94,14 +95,10 @@
 	width: 100%;
 }
 
+
 .home-form-panel form button {
-	background: var(--red);
-	border: 0;
-	border-radius: 1.25rem;
+	background: var(--dark-blue);
 	color: #fff;
-	cursor: pointer;
-	font-size: 0.875rem;
-	font-weight: 600;
 	margin-top: 0.25rem;
 	padding: 0.7rem 1rem;
 }
@@ -121,9 +118,3 @@
 	padding: 0.4rem 0.75rem;
 }
 
-@media (max-width: 37.5rem) {
-	.home-panel {
-		min-height: 100vh;
-		width: 100%;
-	}
-}

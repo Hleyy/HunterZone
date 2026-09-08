@@ -7,6 +7,7 @@ import ScoreBoard from '../components/ScoreBoard';
 
 import doorIcon from '../assets/icons/door.svg';
 import doorOpenIcon from '../assets/icons/door-open.svg';
+import hunterNetIcon from '../assets/icons/hunter-net.svg';
 
 const HEARTBEAT = 5000;
 const TIMEOUT = 30000;
@@ -169,7 +170,7 @@ export default function Lobby() {
         load();
     }, [router.isReady, code]);
 
-    // Heartbeat
+    // Heartbeat -> Permet de vérifier s'il y a des joueurs inactifs
     useEffect(() => {
         if (!party?.id || !playerId) return;
 
@@ -306,54 +307,27 @@ export default function Lobby() {
 
                 <div className="party-info">
                     <div>
-                        <p className="section-label">
-                            Game code
-                        </p>
-
-                        <strong className="party-code">
-                            {party.code}
-                        </strong>
+                        <p className="section-label">Game code</p>
+                        <strong className="party-code">{party.code}</strong>
                     </div>
 
-                    <button
-                        className="leave-button"
-                        onClick={leave}
-                        aria-label="Leave the lobby"
-                    >
-                        <img
-                            className="door-icon door-icon-closed"
-                            src={doorIcon.src || doorIcon}
-                            alt=""
-                        />
-
-                        <img
-                            className="door-icon door-icon-open"
-                            src={doorOpenIcon.src || doorOpenIcon}
-                            alt=""
-                        />
+                    <button className="leave-button" onClick={leave} aria-label="Leave the lobby">
+                        <img className="door-icon door-icon-closed" src={doorIcon.src || doorIcon} alt=""></img>
+                        <img className="door-icon door-icon-open" src={doorOpenIcon.src || doorOpenIcon} alt=""></img>
                     </button>
                 </div>
 
                 <div className="players-heading">
-                    <p className="players-count">
-                        <strong>{players.length}</strong>{' '}
-                        players in the game
-                    </p>
+                    <p className="players-count"><strong>{players.length}</strong>{' '}players in the game</p>
                 </div>
 
-                <ScoreBoard
-                    players={players}
-                    hostId={party.host_id}
-                />
+                <ScoreBoard players={players} hostId={party.host_id}/>
 
                 {isHost && party.status === 'waiting' && (
                     <footer className="lobby-footer">
-                        <button
-                            className="start-button"
-                            onClick={start}
-                        >
-                            Start the hunt
-                            <span>⌁</span>
+                        <button className="start-button" onClick={start}>
+                            Start to hunt
+                            <img className="hunter-net-icon" src={hunterNetIcon.src || hunterNetIcon} alt=""/>
                         </button>
                     </footer>
                 )}

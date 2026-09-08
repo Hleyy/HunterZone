@@ -1,0 +1,37 @@
+@import url('https://fonts.googleapis.com/css2?family=Amaranth:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+@font-face {
+	font-family: 'AMCAP Eternal Regular';
+	font-style: normal;
+	font-weight: normal;
+	src: local('AMCAP Eternal Regular'), url('../assets/fonts/AMCAP%20Eternal.woff') format('woff');
+}
+
+:root {
+	--ink: #1e1e1e;
+	--muted: #565968;
+	--paper: #dc7a2b;
+	--line: rgba(30, 30, 30, .18);
+	--yellow: #f0c532;
+	--red: #d13002;
+	--brown: #ab6237;
+	--dark-blue: #565968;
+	--title-font: 'AMCAP Eternal Regular', sans-serif;
+	--button-font: 'Amaranth', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #__next { min-height: 100%; }
+
+body {
+	margin: 0;
+	color: var(--ink);
+	background: var(--ink);
+	font-family: 'Amaranth', sans-serif;
+}
+
+button {
+	font: inherit;
+	font-family: var(--button-font);
+}

@@ -10,7 +10,7 @@ import doorOpenIcon from '../assets/icons/door-open.svg';
 import hunterNetIcon from '../assets/icons/hunter-net.svg';
 
 const HEARTBEAT = 5000;
-const TIMEOUT = 30000;
+const TIMEOUT = 120000;
 
 export default function Lobby() {
     const router = useRouter();
@@ -23,10 +23,10 @@ export default function Lobby() {
 
     const playerId =
         typeof window !== 'undefined'
-            ? Number(localStorage.getItem('hunterzone_player_id'))
+            ? Number(sessionStorage.getItem('hunterzone_player_id'))
             : null;
 
-    const isHost = party?.host_id === playerId;
+    const isHost = Number(party?.host_id) === playerId;
 
     async function loadPlayers(gameId) {
         const { data, error } = await supabase
@@ -46,7 +46,7 @@ export default function Lobby() {
         return router.push('/accueil');
     }
 
-    const isHost = party.host_id === playerId;
+    const isHost = Number(party.host_id) === playerId;
 
     // Si l'hôte quitte, on choisit son successeur AVANT de le supprimer.
     let newHost = null;
@@ -103,8 +103,8 @@ export default function Lobby() {
         }
     }
 
-    localStorage.removeItem('hunterzone_player_id');
-    localStorage.removeItem('hunterzone_game_id');
+    sessionStorage.removeItem('hunterzone_player_id');
+    sessionStorage.removeItem('hunterzone_game_id');
 
     router.push('/accueil');
 }
@@ -137,6 +137,28 @@ export default function Lobby() {
 
     async function start() {
         if (!party || !isHost || party.status !== 'waiting') return;
+
+        const { data: gamePlayers, error: playersError } = await supabase
+            .from('players')
+            .select('id')
+            .eq('game_id', party.id);
+
+        if (playersError || !gamePlayers?.length) return console.error('Role assignment:', playersError);
+        if (gamePlayers.length < 2) return;
+
+        const catId = gamePlayers[Math.floor(Math.random() * gamePlayers.length)].id;
+        const roleUpdates = gamePlayers.map(player =>
+            supabase
+                .from('players')
+                .update({ role: player.id === catId ? 'cat' : 'mouse' })
+                .eq('id', player.id)
+                .eq('game_id', party.id)
+        );
+
+        const results = await Promise.all(roleUpdates);
+        const roleError = results.find(result => result.error)?.error;
+
+        if (roleError) return console.error('Role assignment:', roleError);
 
         const { error } = await supabase
             .from('games')
@@ -187,8 +209,16 @@ export default function Lobby() {
         heartbeat();
 
         const interval = setInterval(heartbeat, HEARTBEAT);
+        const onVisibilityChange = () => {
+            if (document.visibilityState === 'visible') heartbeat();
+        };
 
-        return () => clearInterval(interval);
+        document.addEventListener('visibilitychange', onVisibilityChange);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', onVisibilityChange);
+        };
     }, [party?.id, playerId]);
 
     // Nettoyage des joueurs inactifs
@@ -325,7 +355,7 @@ export default function Lobby() {
 
                 {isHost && party.status === 'waiting' && (
                     <footer className="lobby-footer">
-                        <button className="start-button" onClick={start}>
+                        <button className="start-button" onClick={start} disabled={players.length < 2}>
                             Start to hunt
                             <img className="hunter-net-icon" src={hunterNetIcon.src || hunterNetIcon} alt=""/>
                         </button>

@@ -46,9 +46,9 @@
 	border-radius: 1.25rem;
 	cursor: pointer;
 	font-family: var(--button-font);
-	font-size: 0.875rem;
+	font-size: 1rem;
 	font-weight: 600;
-	padding: 0.7rem 1.1rem;
+	padding: 0.9rem 1.4rem;
 	transition: transform .2s, filter .2s;
 }
 
@@ -100,12 +100,12 @@
 	background: var(--dark-blue);
 	color: #fff;
 	margin-top: 0.25rem;
-	padding: 0.7rem 1rem;
+	padding: 0.9rem 1.25rem;
 }
 
 .home-form-panel form p {
 	color: #fff;
-	font-size: 0.75rem;
+	font-size: 0.875rem;
 	margin: 0;
 	text-align: center;
 }
@@ -113,8 +113,8 @@
 .home-back-button {
 	background: transparent;
 	color: var(--ink);
-	font-size: 0.75rem;
+	font-size: 1rem;
 	margin-top: 1rem;
-	padding: 0.4rem 0.75rem;
+	padding: 0.8rem 1.4rem;
 }
 

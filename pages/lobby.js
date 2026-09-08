@@ -302,7 +302,7 @@ export default function Lobby() {
         <main className="lobby-page">
             <Panel>
                 <header className="lobby-header">
-                    <h1>LE CHAT ET LA SOURIS</h1>
+                    <h1>HUNTERZONE</h1>
                 </header>
 
                 <div className="party-info">

@@ -1,0 +1,129 @@
+.home-page {
+	align-items: center;
+	background: var(--paper);
+	display: flex;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 0;
+}
+
+.home-panel {
+	align-items: center;
+	background-color: var(--paper);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	min-height: 100vh;
+	padding: 3rem 2rem;
+	width: 100%;
+}
+
+.home-panel h1 {
+	color: #fff;
+	font-family: 'Bowlby One SC', sans-serif;
+	font-size: clamp(2rem, 8vw, 2.75rem);
+	letter-spacing: 0;
+	line-height: 1;
+	margin: 0 0 1.5rem;
+	text-align: center;
+}
+
+.home-actions,
+.home-form-panel {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	width: 100%;
+}
+
+.home-actions {
+	gap: 0.75rem;
+}
+
+.home-button,
+.home-back-button {
+	border: 0;
+	border-radius: 1.25rem;
+	cursor: pointer;
+	font-size: 0.875rem;
+	font-weight: 600;
+	padding: 0.7rem 1.1rem;
+	transition: transform .2s, filter .2s;
+}
+
+.home-button:hover,
+.home-back-button:hover {
+	filter: brightness(1.08);
+	transform: translateY(-0.125rem);
+}
+
+.home-button-primary {
+	background: var(--brown);
+	color: #fff;
+}
+
+.home-button-secondary {
+	background: var(--yellow);
+	color: var(--ink);
+}
+
+.home-form-panel h2 {
+	color: #fff;
+	font-family: 'Bowlby One SC', sans-serif;
+	font-size: 1.25rem;
+	line-height: 1.1;
+	margin: 0 0 1.25rem;
+	text-align: center;
+}
+
+.home-form-panel form {
+	align-items: center;
+	display: flex;
+	flex-direction: column;
+	gap: 0.7rem;
+	width: min(100%, 20rem);
+}
+
+.home-form-panel input {
+	background: rgba(255, 255, 255, .9);
+	border: 0;
+	border-radius: 0.25rem;
+	color: var(--ink);
+	font-size: 0.875rem;
+	padding: 0.75rem 0.8rem;
+	width: 100%;
+}
+
+.home-form-panel form button {
+	background: var(--red);
+	border: 0;
+	border-radius: 1.25rem;
+	color: #fff;
+	cursor: pointer;
+	font-size: 0.875rem;
+	font-weight: 600;
+	margin-top: 0.25rem;
+	padding: 0.7rem 1rem;
+}
+
+.home-form-panel form p {
+	color: #fff;
+	font-size: 0.75rem;
+	margin: 0;
+	text-align: center;
+}
+
+.home-back-button {
+	background: transparent;
+	color: var(--ink);
+	font-size: 0.75rem;
+	margin-top: 1rem;
+	padding: 0.4rem 0.75rem;
+}
+
+@media (max-width: 37.5rem) {
+	.home-panel {
+		min-height: 100vh;
+		width: 100%;
+	}
+}

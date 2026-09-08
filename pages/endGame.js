@@ -72,7 +72,7 @@ export default function EndGame() {
 								<img
 									className="end-game-player-avatar"
 									src={getAvatarDataUri(player)}
-									alt={player.name || `Joueur ${player.id}`}
+									alt={player.name || `Player ${player.id}`}
 								/>
 								<span className="end-game-player-name">
 									{player.name || `Joueur ${player.id}`}
@@ -80,7 +80,7 @@ export default function EndGame() {
 								<img
 									className="end-game-player-role"
 									src={roleIcon.src || roleIcon}
-									alt={player.role === 'cat' ? 'Chat' : 'Souris'}
+									alt={player.role === 'cat' ? 'Cat' : 'Mouse'}
 								/>
 							</div>
 						);

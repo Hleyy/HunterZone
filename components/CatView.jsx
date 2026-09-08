@@ -12,6 +12,11 @@ const GAME_DURATION_SECONDS = 600;
 const CATCH_RADIUS_METERS = 5;
 const SAFE_ZONE_RADIUS_METERS = 500;
 const ZONE_WARNING_SECONDS = 5;
+const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: false,
+  timeout: 30000,
+  maximumAge: 10000,
+};
 
 
 // Icônes personnalisées pour les marqueurs
@@ -58,7 +63,7 @@ function createPulseIcon(player, role) {
       <div class="game-map-marker-shell" style="--marker-color: ${color}">
         <div class="game-map-marker-pulse"></div>
         <div class="game-map-marker-pulse game-map-marker-pulse--delayed"></div>
-        <img class="game-map-marker-avatar" src="${avatar}" alt="${player.name || 'Joueur'}" />
+        <img class="game-map-marker-avatar" src="${avatar}" alt="${player.name || 'Player'}" />
       </div>
     `,
     className: 'custom-player-marker',
@@ -95,6 +100,9 @@ export default function CatGameView({ code }) {
   const [zoneCenter, setZoneCenter] = useState(null);
   const [isInRestrictedZone, setIsInRestrictedZone] = useState(false);
   const [zoneWarningSeconds, setZoneWarningSeconds] = useState(ZONE_WARNING_SECONDS);
+  const [locationError, setLocationError] = useState(false);
+  const [locationErrorCode, setLocationErrorCode] = useState(null);
+  const [locationRetry, setLocationRetry] = useState(0);
   const hasEndedRef = useRef(false);
   const zoneCenterRef = useRef(null);
   const zoneWarningTimerRef = useRef(null);
@@ -147,23 +155,6 @@ export default function CatGameView({ code }) {
         setCurrentRole(currentPlayer.role);
       }
 
-      if (currentPlayer && 'geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            const currentPosition = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setPlayerPosition(currentPosition);
-            if (currentPlayer.role === 'cat') {
-              setCatPosition(currentPosition);
-              updateZoneCenter(currentPosition, id);
-            }
-            if (playerId && id) {
-              supabase.from('players').update(currentPosition).eq('id', playerId).eq('game_id', id);
-            }
-          },
-          (err) => console.error('Erreur GPS initiale :', err),
-          { enableHighAccuracy: true, timeout: 15000 }
-        );
-      }
     };
 
     const loadGame = async () => {
@@ -192,6 +183,33 @@ export default function CatGameView({ code }) {
 
   useEffect(() => {
     if (!gameId) return;
+
+    const refreshPlayers = async () => {
+      const { data, error } = await supabase
+        .from('players')
+        .select('id, name, role, lat, lng, is_found, game_id')
+        .eq('game_id', gameId);
+
+      if (error) {
+        console.error('Refreshing players:', error);
+        return;
+      }
+
+      const allPlayers = data || [];
+      setPlayers(allPlayers);
+
+      const positionedPlayers = allPlayers.filter((player) => player.lat != null && player.lng != null);
+      const cat = positionedPlayers.find((player) => player.role === 'cat');
+      if (cat) setCatPosition({ lat: cat.lat, lng: cat.lng });
+
+      const currentPlayer = allPlayers.find((player) => player.id === playerId);
+      if (currentPlayer) {
+        setCurrentRole(currentPlayer.role);
+        if (currentPlayer.lat != null && currentPlayer.lng != null) {
+          setPlayerPosition({ lat: currentPlayer.lat, lng: currentPlayer.lng });
+        }
+      }
+    };
 
     const channel = supabase
       .channel(`map-${gameId}`)
@@ -234,7 +252,12 @@ export default function CatGameView({ code }) {
       })
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    const refreshInterval = setInterval(refreshPlayers, 5000);
+
+    return () => {
+      clearInterval(refreshInterval);
+      supabase.removeChannel(channel);
+    };
   }, [gameId, playerId]);
 
   const finishGame = async (winner) => {
@@ -354,7 +377,12 @@ export default function CatGameView({ code }) {
     if (!gameId || !playerId || !('geolocation' in navigator)) return;
 
     const savePosition = async (position) => {
+      setLocationError(false);
+      setLocationErrorCode(null);
       setPlayerPosition(position);
+      setPlayers((currentPlayers) => currentPlayers.map((player) => (
+        player.id === playerId ? { ...player, ...position } : player
+      )));
 
       const { data } = await supabase
         .from('players')
@@ -369,8 +397,22 @@ export default function CatGameView({ code }) {
       }
 
       if (playerId && gameId) {
-        await supabase.from('players').update(position).eq('id', playerId).eq('game_id', gameId);
+        const { error: positionError } = await supabase
+          .from('players')
+          .update(position)
+          .eq('id', playerId)
+          .eq('game_id', gameId);
+
+        if (positionError) console.error('Position update:', positionError);
       }
+    };
+
+    const handleLocationError = (error) => {
+      if (error.code === error.PERMISSION_DENIED || error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
+        setLocationError(true);
+        setLocationErrorCode(error.code);
+      }
+      console.error('Location error:', error);
     };
 
     const syncCurrentPlayerPosition = () => {
@@ -382,8 +424,8 @@ export default function CatGameView({ code }) {
           };
           savePosition(position);
         },
-        (err) => console.error('Erreur GPS :', err),
-        { enableHighAccuracy: true, timeout: 20000 }
+          handleLocationError,
+          GEOLOCATION_OPTIONS
       );
     };
 
@@ -397,12 +439,12 @@ export default function CatGameView({ code }) {
         };
         savePosition(position);
       },
-      (err) => console.error('Erreur GPS :', err),
-      { enableHighAccuracy: true }
+      handleLocationError,
+      GEOLOCATION_OPTIONS
     );
 
     return () => navigator.geolocation.clearWatch(watchId);
-  }, [gameId, playerId]);
+  }, [gameId, playerId, locationRetry]);
 
   // Gestion du décompte du Timer
   useEffect(() => {
@@ -513,14 +555,28 @@ export default function CatGameView({ code }) {
           onClick={() => catchPlayer(catchablePlayer)}
           disabled={isCatching}
         >
-          {isCatching ? 'Capture...' : `Attraper ${catchablePlayer.name || `Joueur ${catchablePlayer.id}`}`}
+          {isCatching ? 'Catching...' : `Catch ${catchablePlayer.name || `Player ${catchablePlayer.id}`}`}
         </button>
       )}
 
       {isInRestrictedZone && (
         <div className="game-map-zone-warning" role="alert">
-          <strong>Zone dépassée</strong>
-          <span>Reviens dans la zone dans {zoneWarningSeconds}s ou tu seras éliminé.</span>
+          <strong>Safe zone exceeded</strong>
+          <span>Return to the safe zone within {zoneWarningSeconds}s or you will be eliminated.</span>
+        </div>
+      )}
+
+      {locationError && !playerPosition && (
+        <div className="game-map-location-warning" role="status">
+          <strong>{locationErrorCode === 2 ? 'Desktop location unavailable' : 'Location unavailable'}</strong>
+          <span>
+            {locationErrorCode === 2
+              ? 'Enable location services for your browser, or use a phone with GPS.'
+              : 'Allow location access, then try again.'}
+          </span>
+          <button type="button" onClick={() => setLocationRetry((retry) => retry + 1)}>
+            Retry location
+          </button>
         </div>
       )}
 
@@ -594,15 +650,15 @@ export default function CatGameView({ code }) {
                 <img
                   className="player-card-avatar"
                   src={getAvatarDataUri(player)}
-                  alt={player.name || `Joueur ${player.id}`}
+                  alt={player.name || `Player ${player.id}`}
                 />
 
                 <div className="player-card-meta">
                   <div className="player-card-name">
-                    {player.name || `Joueur ${player.id}`}
+                    {player.name || `Player ${player.id}`}
                   </div>
                   <div className="player-card-distance">
-                    {player.is_found ? 'Capturé' : hasPosition ? getDistanceLabel(distance) : 'Position inconnue'}
+                    {player.is_found ? 'Captured' : hasPosition ? getDistanceLabel(distance) : 'Location unknown'}
                   </div>
                 </div>
 

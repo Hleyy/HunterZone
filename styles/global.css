@@ -3,8 +3,9 @@
 @font-face {
 	font-family: 'AMCAP Eternal Regular';
 	font-style: normal;
-	font-weight: normal;
-	src: local('AMCAP Eternal Regular'), url('../assets/fonts/AMCAP%20Eternal.woff') format('woff');
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/AMCAP-Eternal.woff') format('woff');
 }
 
 :root {

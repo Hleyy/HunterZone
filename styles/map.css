@@ -1,0 +1,386 @@
+.game-map-root {
+  --game-interface-color: #dc7a2b;
+  --game-timer-background: #dc7a2b;
+  --game-panel-text: #dc7a2b;
+  --game-panel-border: rgba(220, 122, 43, 0.25);
+  --game-direction-filter: invert(49%) sepia(80%) saturate(1186%) hue-rotate(346deg) brightness(95%) contrast(95%);
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--game-interface-color);
+}
+
+.game-map-root--mouse {
+  --game-interface-color: #565968;
+  --game-timer-background: #565968;
+  --game-panel-text: #1f2e4a;
+  --game-panel-border: rgba(31, 46, 74, 0.2);
+  --game-direction-filter: invert(17%) sepia(18%) saturate(900%) hue-rotate(191deg) brightness(62%) contrast(115%);
+}
+
+.game-map-leaflet {
+  width: 100%;
+  height: 100%;
+}
+
+.custom-marker,
+.custom-player-marker {
+  background: transparent;
+  border: none;
+}
+
+.game-map-timer {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  z-index: 1000;
+  display: inline-flex;
+  width: 208px;
+  height: 88px;
+  padding: 12px 20px 10px;
+  transform: translateX(-50%);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: var(--game-timer-background);
+  border-radius: 18px;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.16);
+  font-family: 'AMCAP Eternal Regular', 'AMCAP Eternal', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+.game-map-role-icon {
+  position: absolute;
+  top: -42px;
+  left: 50%;
+  width: 104px;
+  height: 54px;
+  transform: translateX(-50%);
+  object-fit: contain;
+}
+
+.game-map-timer-label,
+.game-map-timer-value {
+  font-family: 'AMCAP Eternal Regular', 'AMCAP Eternal', sans-serif;
+  line-height: 1;
+}
+
+.game-map-timer-label {
+  margin-top: 10px;
+  opacity: 0.95;
+  font-size: 1.65rem;
+}
+
+.game-map-timer-value {
+  margin-top: 2px;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.game-map-catch-action {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  z-index: 1000;
+  min-width: 190px;
+  padding: 12px 18px;
+  transform: translateX(-50%);
+  color: #fff;
+  background: var(--game-timer-background);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+  cursor: pointer;
+  font-family: var(--button-font);
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.game-map-catch-action:disabled {
+  cursor: wait;
+  opacity: 0.75;
+}
+
+.game-map-zone-warning {
+  position: absolute;
+  top: 150px;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  width: min(calc(100% - 32px), 360px);
+  padding: 12px 16px;
+  transform: translateX(-50%);
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
+  background: rgba(190, 45, 20, 0.94);
+  border: 2px solid #fff;
+  border-radius: 12px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+  font-family: var(--button-font);
+  text-align: center;
+}
+
+.game-map-zone-warning strong {
+  font-size: 1rem;
+}
+
+.game-map-zone-warning span {
+  font-size: 0.85rem;
+}
+
+.game-map-player-panel {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  z-index: 1000;
+  display: flex;
+  width: 210px;
+  max-height: calc(100vh - 32px);
+  padding: 10px 12px;
+  transform: translateY(-50%);
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  color: var(--game-panel-text);
+  background: var(--game-interface-color);
+  border-radius: 20px;
+}
+
+.game-map-player-list {
+  display: flex;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.player-card {
+  display: flex;
+  width: 100%;
+  padding: 10px 8px;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.96);
+  border-radius: 12px;
+  box-shadow: 0 10px 18px rgba(15, 23, 42, 0.08);
+}
+
+.player-card-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border: 2px solid rgba(15, 23, 42, 0.08);
+  border-radius: 50%;
+  background: #fff;
+  object-fit: cover;
+}
+
+.player-card-meta {
+  min-width: 0;
+  flex: 1;
+}
+
+.player-card-name,
+.player-card-distance {
+  color: var(--game-panel-text);
+}
+
+.player-card-name {
+  overflow: hidden;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-card-distance {
+  margin-top: 4px;
+  font-size: 0.7rem;
+}
+
+.direction-indicator {
+  display: flex;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  background: #fffaf2;
+  border: 1px solid var(--game-panel-border);
+  border-radius: 50%;
+}
+
+.direction-indicator img {
+  width: 14px;
+  height: 14px;
+  transform-origin: center;
+  filter: var(--game-direction-filter);
+}
+
+.game-map-marker-shell {
+  position: relative;
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+}
+
+.game-map-marker-pulse {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--marker-color);
+  border-radius: 50%;
+  animation: pulseWave 5s infinite ease-out;
+  opacity: 0.9;
+}
+
+.game-map-marker-pulse--delayed {
+  inset: -6px;
+  animation-delay: 2.5s;
+  opacity: 0.75;
+}
+
+.game-map-marker-avatar {
+  position: relative;
+  z-index: 2;
+  width: 24px;
+  height: 24px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px rgba(15, 23, 42, 0.08);
+}
+
+@keyframes pulseWave {
+  0% { transform: scale(0.7); opacity: 0.9; }
+  70% { transform: scale(1.6); opacity: 0.15; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+
+@media (max-width: 700px) {
+  .game-map-player-panel {
+    right: 8px;
+    width: 180px;
+  }
+
+  .game-map-timer {
+    top: 42px;
+  }
+}
+
+.end-game-page {
+  display: flex;
+  min-height: 100vh;
+  padding: 24px;
+  align-items: center;
+  justify-content: center;
+  color: #1e1e1e;
+  background: #f5f0e8;
+  font-family: var(--button-font);
+  text-align: center;
+}
+
+.end-game-content {
+  display: flex;
+  width: min(100%, 420px);
+  align-items: center;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.end-game-title,
+.end-game-result {
+  margin: 0;
+  font-family: var(--title-font);
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+.end-game-result {
+  display: flex;
+  width: 100%;
+  min-height: 70px;
+  padding: 12px 20px;
+  color: #fff;
+  align-items: center;
+  background: #565968;
+  border-radius: 14px;
+  justify-content: center;
+}
+
+.end-game-result--cat {
+  background: #dc7a2b;
+}
+
+.end-game-players {
+  display: flex;
+  width: 100%;
+  max-height: 340px;
+  padding: 12px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 8px;
+  background: #565968;
+  border-radius: 14px;
+}
+
+.end-game-players--cat {
+  background: #dc7a2b;
+}
+
+.end-game-player {
+  display: flex;
+  min-height: 56px;
+  padding: 8px 12px;
+  align-items: center;
+  gap: 12px;
+  color: #1e1e1e;
+  background: #fff;
+  border-radius: 10px;
+  text-align: left;
+}
+
+.end-game-player-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border: 2px solid rgba(30, 30, 30, 0.12);
+  border-radius: 50%;
+}
+
+.end-game-player-name {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.end-game-player-role {
+  width: 58px;
+  height: 34px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.end-game-home-button {
+  padding: 12px 22px;
+  color: #fff;
+  background: #565968;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--button-font);
+  font-weight: 700;
+}

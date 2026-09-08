@@ -1,10 +1,10 @@
 .lobby-page {
 	align-items: center;
-	background: var(--ink);
+	background: var(--paper);
 	display: flex;
 	justify-content: center;
 	min-height: 100vh;
-	padding: 0;
+	padding: 1.5rem;
 	position: relative;
 	width: 100%;
 }
@@ -12,13 +12,15 @@
 .lobby-panel {
 	align-items: center;
 	animation: appear .45s ease-out both;
-	background: var(--paper);
+	background: rgba(255, 255, 255, .5);
+	border-radius: 1.5rem;
 	display: flex;
 	flex-direction: column;
-	min-height: 100vh;
+	min-height: 32rem;
+	max-width: 38rem;
 	padding: 4.5rem 2rem 3.5rem;
 	position: relative;
-	width: 100%;
+	width: min(100%, 38rem);
 }
 
 .lobby-header {
@@ -37,7 +39,7 @@
 }
 
 .lobby-header h1 {
-	color: #fff;
+	color: var(--paper);
 	font-family: var(--title-font);
 	font-size: clamp(2rem, 5vw, 3rem);
 	letter-spacing: 0;
@@ -127,7 +129,7 @@
 }
 
 .players-count {
-	background: var(--brown);
+	background: var(--dark-blue);
 	border-radius: 6.1875rem;
 	color: #fff;
 	font-size: 0.75rem;

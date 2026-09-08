@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amaranth:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amaranth:wght@400;700&display=swap');
 
 @font-face {
 	font-family: 'AMCAP Eternal Regular';
@@ -35,25 +35,3 @@ button {
 	font: inherit;
 	font-family: var(--button-font);
 }
-
-.timercontainer {
-    color: #fff;
-    background: #DC7A2B;
-    position: absolute;
-    top: '16px';
-    left: '50%';
-    flex: 1000;
-        padding: 10px 24px;
-        border: '20px';
-        display: 'block';
-        align-items: 'center';
-        gap: '10px';
-    transform: translateX(-50%);
-}
-
-.overlay-image {
-    position: absolute; /* Removes from flow and positions relative to container */
-    top: 10px;          /* Adjust vertical position */
-    left: 10px;         /* Adjust horizontal position */
-    z-index: 10;        /* Ensures image stays above the div */
-}   

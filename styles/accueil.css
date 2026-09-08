@@ -1,24 +1,29 @@
 .home-page,
 .home-panel {
 	align-items: center;
-	background: var(--paper);
 	display: flex;
 	min-height: 100vh;
 }
 
 .home-page {
+	background: var(--paper);
 	justify-content: center;
+	padding: 1.5rem;
 }
 
 .home-panel {
+	background: #fff;
+	border-radius: 1.5rem;
 	flex-direction: column;
 	justify-content: center;
+	max-width: 32rem;
+	min-height: 0;
 	padding: 3rem 2rem;
-	width: 100%;
+	width: fit-content;
 }
 
 .home-panel h1 {
-	color: #fff;
+	color: var(--paper);
 	font-family: var(--title-font);
 	font-size: clamp(2rem, 8vw, 2.75rem);
 	letter-spacing: 0;
@@ -65,11 +70,12 @@
 
 .home-button-secondary {
 	background: #fff;
+	border: 2px solid var(--dark-blue);
 	color: var(--dark-blue);
 }
 
 .home-form-panel h2 {
-	color: #fff;
+	color: var(--paper);
 	font-family: var(--title-font);
 	font-size: 1.25rem;
 	line-height: 1.1;
@@ -87,12 +93,23 @@
 
 .home-form-panel input {
 	background: rgba(255, 255, 255, .9);
-	border: 0;
+	border: 1px solid #c7c9cf;
 	border-radius: 0.25rem;
-	color: var(--ink);
+	color: var(--dark-blue);
 	font-size: 0.875rem;
 	padding: 0.75rem 0.8rem;
 	width: 100%;
+}
+
+.home-form-panel input:focus {
+	border-color: var(--dark-blue);
+	box-shadow: 0 0 0 2px rgba(86, 89, 104, .15);
+	outline: none;
+}
+
+.home-form-panel input::placeholder {
+	color: #777b87;
+	opacity: 1;
 }
 
 

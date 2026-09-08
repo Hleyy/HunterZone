@@ -160,9 +160,11 @@ export default function Lobby() {
 
         if (roleError) return console.error('Role assignment:', roleError);
 
+        const startedAt = new Date().toISOString();
+
         const { error } = await supabase
             .from('games')
-            .update({ status: 'playing' })
+            .update({ status: 'playing', started_at: startedAt })
             .eq('id', party.id)
             .eq('host_id', playerId);
 

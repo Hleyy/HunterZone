@@ -1,0 +1,67 @@
+.role-page {
+    align-items: center;
+    background: var(--paper);
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 1.5rem;
+}
+
+.role-popup {
+    background: #fff;
+    border-radius: 1rem;
+    color: var(--dark-blue);
+    max-width: 28rem;
+    padding: 3rem 2rem 2rem;
+    position: relative;
+    text-align: center;
+    width: 100%;
+}
+
+.role-close {
+    align-items: center;
+    background: var(--paper);
+    border: 0;
+    border-radius: 0.5rem;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    font-size: 1.5rem;
+    height: 2.5rem;
+    justify-content: center;
+    line-height: 1;
+    padding: 0;
+    position: absolute;
+    right: 1rem;
+    top: 1rem;
+    width: 2.5rem;
+}
+
+.role-message {
+    font-family: var(--button-font);
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
+    line-height: 1.25;
+    margin: 0 auto 2rem;
+    max-width: 21rem;
+}
+
+.role-action {
+    background: var(--paper);
+    border: 0;
+    border-radius: 1.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-family: var(--button-font);
+    font-size: 1.125rem;
+    padding: 0.9rem 1.75rem;
+}
+
+.map-page {
+    align-items: center;
+    background: var(--paper);
+    color: #fff;
+    display: flex;
+    font-family: var(--title-font);
+    justify-content: center;
+    min-height: 100vh;
+}

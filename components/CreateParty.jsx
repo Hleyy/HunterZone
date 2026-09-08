@@ -50,8 +50,8 @@ export default function CreateParty() {
             .update({ host_id: player.id })
             .eq('id', game.id);
 
-        localStorage.setItem('hunterzone_player_id', player.id);
-        localStorage.setItem('hunterzone_game_id', game.id);
+        sessionStorage.setItem('hunterzone_player_id', player.id);
+        sessionStorage.setItem('hunterzone_game_id', game.id);
 
         router.push(`/lobby?code=${code}`);
     }

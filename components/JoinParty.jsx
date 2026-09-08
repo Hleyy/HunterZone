@@ -64,8 +64,8 @@ export default function JoinParty() {
             return setLoading(false);
         }
 
-        localStorage.setItem('hunterzone_player_id', player.id);
-        localStorage.setItem('hunterzone_game_id', game.id);
+        sessionStorage.setItem('hunterzone_player_id', player.id);
+        sessionStorage.setItem('hunterzone_game_id', game.id);
 
         router.push(`/lobby?code=${game.code}`);
     }

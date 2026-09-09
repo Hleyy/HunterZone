@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import CreateParty from '../components/CreateParty';
@@ -7,6 +7,10 @@ import JoinParty from '../components/JoinParty';
 export default function Accueil() {
     const [mode, setMode] = useState(null);
     const router = useRouter();
+
+    useEffect(() => {
+        if (router.isReady && router.query.code) setMode('join');
+    }, [router.isReady, router.query.code]);
 
     return (
         <main className="home-page">

@@ -1,6 +1,8 @@
 import { Avatar, Style } from '@dicebear/core';
 import initialFace from '@dicebear/styles/initial-face.json' with { type: 'json' };
 import crownIcon from '../assets/icons/crown.svg';
+import { useEffect, useState } from 'react';
+import { getLocalProfileStats } from '../src/lib/localProfile';
 
 const avatarColors = [
     '#ffadad', '#ffd6a5', '#fdffb6', '#caffbf', '#9bf6ff',
@@ -23,6 +25,11 @@ export function getAvatarDataUri(player) {
 }
 
 export default function ScoreBoard({ players, hostId }) {
+        const [stats, setStats] = useState({ wins: 0, miceCaught: 0 });    
+        useEffect(() => {
+            setStats(getLocalProfileStats());
+        }, []);
+
     return (
         <ul className="player-list" aria-label="Game players">
             {players.map(player => (
@@ -35,7 +42,13 @@ export default function ScoreBoard({ players, hostId }) {
                         )}
                     </span>
 
-                    <span className="player-name">{player.name}</span>
+                    <span className="player-name">
+                        <span>{player.name}</span>
+                        <span className="player-stats">
+                            {stats.wins} 🏆  {stats.miceCaught} 🐭
+                        </span>
+                    </span>
+
                 </li>
             ))}
         </ul>

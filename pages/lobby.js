@@ -8,6 +8,7 @@ import ScoreBoard from '../components/ScoreBoard';
 import doorIcon from '../assets/icons/door.svg';
 import doorOpenIcon from '../assets/icons/door-open.svg';
 import hunterNetIcon from '../assets/icons/hunter-net.svg';
+import Copy from '../assets/icons/Copy.svg';
 
 const HEARTBEAT = 5000;
 const TIMEOUT = 600000;
@@ -18,6 +19,7 @@ export default function Lobby() {
     const [party, setParty] = useState(null);
     const [players, setPlayers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [linkCopied, setLinkCopied] = useState(false);
 
     const code = router.query.code;
 
@@ -27,6 +29,15 @@ export default function Lobby() {
             : null;
 
     const isHost = Number(party?.host_id) === playerId;
+
+    async function copyInviteLink() {
+        if (!party || typeof window === 'undefined') return;
+
+        const inviteLink = `${window.location.origin}/accueil?code=${encodeURIComponent(party.code)}`;
+        await navigator.clipboard.writeText(inviteLink);
+        setLinkCopied(true);
+        setTimeout(() => setLinkCopied(false), 2000);
+    }
 
     async function loadPlayers(gameId) {
         const { data, error } = await supabase
@@ -338,9 +349,18 @@ export default function Lobby() {
                 </header>
 
                 <div className="party-info">
-                    <div>
+                    <div className="party-code-wrapper">
                         <p className="section-label">Game code</p>
                         <strong className="party-code">{party.code}</strong>
+                        <button
+                            className="copy-link-button"
+                            type="button"
+                            onClick={copyInviteLink}
+                            aria-label="Copy invite link"
+                            title={linkCopied ? 'Link copied' : 'Copy invite link'}
+                        >
+                            <img src={Copy.src || Copy} alt="" />
+                        </button>
                     </div>
 
                     <button className="leave-button" onClick={leave} aria-label="Leave the lobby">

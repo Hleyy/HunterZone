@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../src/lib/supabase';
 
@@ -8,6 +8,16 @@ export default function JoinParty() {
     const [code, setCode] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+
+    useEffect(() => {
+        if (!router.isReady) return;
+
+        const invitedCode = typeof router.query.code === 'string'
+            ? router.query.code.toUpperCase()
+            : '';
+
+        if (invitedCode) setCode(invitedCode);
+    }, [router.isReady, router.query.code]);
 
     async function join(e) {
         e.preventDefault();
@@ -95,12 +105,14 @@ export default function JoinParty() {
                 maxLength={20}
             />
 
-            <input
-                value={code}
-                onChange={e => setCode(e.target.value)}
-                placeholder="Game code"
-                maxLength={7}
-            />
+            {!router.query.code && (
+                <input
+                    value={code}
+                    onChange={e => setCode(e.target.value)}
+                    placeholder="Game code"
+                    maxLength={7}
+                />
+            )}
 
             <button disabled={loading}>
                 {loading ? 'Joining...' : 'Join a game'}

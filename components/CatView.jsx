@@ -6,6 +6,7 @@ import Cat from '../assets/icons/Cat(Hunter).svg';
 import MouseStyle from '../assets/icons/mouse-style.svg';
 import HandIcon from '../assets/icons/hand.svg';
 import { getAvatarDataUri } from './ScoreBoard';
+import { recordCaughtMouse, recordLocalWin } from '../src/lib/localProfile';
 import { supabase } from '../src/lib/supabase';
 
 const GAME_DURATION_SECONDS = 600;
@@ -448,8 +449,9 @@ export default function CatGameView({ code }) {
 
   useEffect(() => {
     if (!gameWinner || !code) return;
+    if (currentRole === gameWinner && gameId) recordLocalWin(gameId);
     router.replace(`/endGame?code=${encodeURIComponent(code)}&winner=${gameWinner}`);
-  }, [gameWinner, code, router]);
+  }, [gameWinner, code, currentRole, gameId, router]);
 
   // Suivi GPS en direct.
   useEffect(() => {
@@ -656,7 +658,10 @@ export default function CatGameView({ code }) {
       return;
     }
 
-    if (caughtPlayer) await checkAllMiceCaptured();
+    if (caughtPlayer) {
+      recordCaughtMouse(player.id);
+      await checkAllMiceCaptured();
+    }
 
     setIsCatching(false);
   };

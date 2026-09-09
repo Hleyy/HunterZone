@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useRouter } from 'next/router';
 
 import CreateParty from '../components/CreateParty';
 import JoinParty from '../components/JoinParty';
 
 export default function Accueil() {
     const [mode, setMode] = useState(null);
+    const router = useRouter();
 
     return (
         <main className="home-page">
@@ -16,6 +18,10 @@ export default function Accueil() {
                         <button className="home-button home-button-primary" onClick={() => setMode('create')}>Create a game</button>
 
                         <button className="home-button home-button-secondary" onClick={() => setMode('join')}>Join a game</button>
+
+                        <button className="home-account-button" type="button" onClick={() => router.push('/profil')}>
+                            Profile
+                        </button>
                     </div>
                 )}
 

@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:capacitor": "CAPACITOR_BUILD=true next build",
     "start": "node server.js"
   },
   "dependencies": {

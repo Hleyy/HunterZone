@@ -10,7 +10,7 @@ import doorOpenIcon from '../assets/icons/door-open.svg';
 import hunterNetIcon from '../assets/icons/hunter-net.svg';
 
 const HEARTBEAT = 5000;
-const TIMEOUT = 120000;
+const TIMEOUT = 600000;
 
 export default function Lobby() {
     const router = useRouter();

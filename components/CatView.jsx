@@ -9,26 +9,27 @@ import { getAvatarDataUri } from './ScoreBoard';
 import { supabase } from '../src/lib/supabase';
 
 const GAME_DURATION_SECONDS = 600;
-const CATCH_RADIUS_METERS = 5;
+const CATCH_RADIUS_METERS = 10;
 const SAFE_ZONE_RADIUS_METERS = 500;
 const ZONE_WARNING_SECONDS = 5;
 const GEOLOCATION_OPTIONS = {
+  enableHighAccuracy: true,
+  timeout: 60000,
+  maximumAge: 0,
+};
+const GEOLOCATION_FALLBACK_OPTIONS = {
   enableHighAccuracy: false,
-  timeout: 30000,
-  maximumAge: 10000,
+  timeout: 15000,
+  maximumAge: 30000,
 };
 
-
-// Icônes personnalisées pour les marqueurs
-const catIcon = L.divIcon({
-  html: '<div style="font-size: 24px;">🐱</div>',
-  className: 'custom-marker',
-  iconSize: [30, 30],
-  iconAnchor: [15, 15]
-});
+const PLAYER_HEARTBEAT_MS = 5000;
+const INACTIVE_PLAYER_TIMEOUT_MS = 10 * 60 * 1000;
+const PLAYER_FIELDS = 'id, name, role, lat, lng, accuracy_m, is_found, game_id';
 
 function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-  const R = 6371000; // Rayon de la Terre en mètres
+  // Distance Haversine, adaptée aux courtes distances GPS.
+  const R = 6371000;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
   const a =
@@ -52,6 +53,13 @@ function getDistanceLabel(distanceInMeters) {
     return `${(distanceInMeters / 1000).toFixed(1)} km`;
   }
   return `${distanceInMeters} m`;
+}
+
+async function fetchPlayers(gameId) {
+  return supabase
+    .from('players')
+    .select(PLAYER_FIELDS)
+    .eq('game_id', gameId);
 }
 
 function createPulseIcon(player, role) {
@@ -107,6 +115,7 @@ export default function CatGameView({ code }) {
   const zoneCenterRef = useRef(null);
   const zoneWarningTimerRef = useRef(null);
   const zoneCountdownTimerRef = useRef(null);
+  const locationRetryTimerRef = useRef(null);
 
   const [players, setPlayers] = useState([]);
   const [gameId, setGameId] = useState(null);
@@ -115,6 +124,7 @@ export default function CatGameView({ code }) {
     ? Number(sessionStorage.getItem('hunterzone_player_id'))
     : null;
 
+  // La première position valide du chat devient le centre partagé de la zone
   const updateZoneCenter = (position, gameIdentifier = gameId) => {
     if (!position || zoneCenterRef.current || !gameIdentifier) return;
 
@@ -132,10 +142,7 @@ export default function CatGameView({ code }) {
     if (!code) return;
 
     const loadPlayers = async (id) => {
-      const { data, error } = await supabase
-        .from('players')
-        .select('id, name, role, lat, lng, is_found, game_id')
-        .eq('game_id', id);
+      const { data, error } = await fetchPlayers(id);
 
       if (error) return console.error('Map players:', error);
 
@@ -184,11 +191,72 @@ export default function CatGameView({ code }) {
   useEffect(() => {
     if (!gameId) return;
 
-    const refreshPlayers = async () => {
-      const { data, error } = await supabase
+    // Le heartbeat et le polling maintiennent le jeu actif si Realtime est indisponible
+    const heartbeat = async () => {
+      if (!playerId) return;
+
+      const { error } = await supabase
         .from('players')
-        .select('id, name, role, lat, lng, is_found, game_id')
+        .update({ last_seen: new Date().toISOString() })
+        .eq('id', playerId)
         .eq('game_id', gameId);
+
+      if (error) console.error('Game heartbeat:', error);
+    };
+
+    const cleanupInactivePlayers = async () => {
+      const cutoff = new Date(Date.now() - INACTIVE_PLAYER_TIMEOUT_MS).toISOString();
+      const { data: inactivePlayers, error } = await supabase
+        .from('players')
+        .select('id, role')
+        .eq('game_id', gameId)
+        .lt('last_seen', cutoff);
+
+      if (error) {
+        console.error('Game cleanup:', error);
+        return;
+      }
+
+      if (inactivePlayers?.some((player) => player.role === 'cat')) {
+        await finishGame('mouse');
+      }
+
+      if (inactivePlayers?.length) {
+        const { error: deleteError } = await supabase
+          .from('players')
+          .delete()
+          .in('id', inactivePlayers.map((player) => player.id));
+
+        if (deleteError) console.error('Removing inactive players:', deleteError);
+      }
+
+      const { data: remainingPlayers, error: remainingError } = await supabase
+        .from('players')
+        .select('id, role')
+        .eq('game_id', gameId);
+
+      if (remainingError) {
+        console.error('Checking remaining players:', remainingError);
+        return;
+      }
+
+      if (remainingPlayers?.length < 2) {
+        const remainingCat = remainingPlayers.some((player) => player.role === 'cat');
+        await finishGame(remainingCat ? 'cat' : 'mouse');
+      }
+    };
+
+    heartbeat();
+    const heartbeatInterval = setInterval(heartbeat, PLAYER_HEARTBEAT_MS);
+    const cleanupInterval = setInterval(cleanupInactivePlayers, PLAYER_HEARTBEAT_MS * 2);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') heartbeat();
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    const refreshPlayers = async () => {
+      const { data, error } = await fetchPlayers(gameId);
 
       if (error) {
         console.error('Refreshing players:', error);
@@ -216,10 +284,7 @@ export default function CatGameView({ code }) {
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'players', filter: `game_id=eq.${gameId}`
       }, async () => {
-        const { data } = await supabase
-          .from('players')
-          .select('id, name, role, lat, lng, is_found, game_id')
-          .eq('game_id', gameId);
+        const { data } = await fetchPlayers(gameId);
         const allPlayers = data || [];
         setPlayers(allPlayers);
 
@@ -255,6 +320,9 @@ export default function CatGameView({ code }) {
     const refreshInterval = setInterval(refreshPlayers, 5000);
 
     return () => {
+      clearInterval(heartbeatInterval);
+      clearInterval(cleanupInterval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       clearInterval(refreshInterval);
       supabase.removeChannel(channel);
     };
@@ -281,6 +349,7 @@ export default function CatGameView({ code }) {
     if (data?.winner) setGameWinner(data.winner);
   };
 
+  // Chaque client vérifie cela pour terminer la partie partout après une capture ou une élimination
   const checkAllMiceCaptured = async () => {
     if (!gameId || gameWinner) return;
 
@@ -320,6 +389,7 @@ export default function CatGameView({ code }) {
   };
 
   useEffect(() => {
+    // La souris dispose de cinq secondes pour revenir dans la zone partagée
     if (currentRole !== 'mouse' || !playerPosition || !zoneCenter || gameWinner) {
       setIsInRestrictedZone(false);
       clearTimeout(zoneWarningTimerRef.current);
@@ -372,11 +442,12 @@ export default function CatGameView({ code }) {
     router.replace(`/endGame?code=${encodeURIComponent(code)}&winner=${gameWinner}`);
   }, [gameWinner, code, router]);
 
-  // Suivi GPS en direct pour le Chat
+  // Suivi GPS en direct.
   useEffect(() => {
     if (!gameId || !playerId || !('geolocation' in navigator)) return;
 
     const savePosition = async (position) => {
+      // Met à jour l’interface immédiatement, puis enregistre la position pour les autres joueurs
       setLocationError(false);
       setLocationErrorCode(null);
       setPlayerPosition(position);
@@ -407,46 +478,86 @@ export default function CatGameView({ code }) {
       }
     };
 
-    const handleLocationError = (error) => {
-      if (error.code === error.PERMISSION_DENIED || error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
-        setLocationError(true);
-        setLocationErrorCode(error.code);
-      }
-      console.error('Location error:', error);
+    let fallbackInProgress = false;
+    let watchId = null;
+    let usingFallback = false;
+
+    const startLocationWatch = (options) => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const position = {
+            lat: pos.coords.latitude,
+            lng: pos.coords.longitude,
+            accuracy_m: pos.coords.accuracy,
+          };
+          savePosition(position);
+        },
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            setLocationError(true);
+            setLocationErrorCode(error.code);
+            return;
+          }
+
+          if (!usingFallback) {
+            usingFallback = true;
+            startLocationWatch(GEOLOCATION_FALLBACK_OPTIONS);
+          }
+        },
+        options
+      );
     };
 
-    const syncCurrentPlayerPosition = () => {
+    const syncCurrentPlayerPosition = (options = GEOLOCATION_OPTIONS) => {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           const position = {
             lat: pos.coords.latitude,
-            lng: pos.coords.longitude
+            lng: pos.coords.longitude,
+            accuracy_m: pos.coords.accuracy,
           };
+          fallbackInProgress = false;
           savePosition(position);
         },
-          handleLocationError,
-          GEOLOCATION_OPTIONS
+        (error) => {
+          if (error.code === error.PERMISSION_DENIED) {
+            setLocationError(true);
+            setLocationErrorCode(error.code);
+            return;
+          }
+
+          if (!fallbackInProgress) {
+            fallbackInProgress = true;
+            usingFallback = true;
+            startLocationWatch(GEOLOCATION_FALLBACK_OPTIONS);
+            syncCurrentPlayerPosition(GEOLOCATION_FALLBACK_OPTIONS);
+            return;
+          }
+
+          setLocationError(true);
+          setLocationErrorCode(error.code);
+          fallbackInProgress = false;
+          locationRetryTimerRef.current = setTimeout(
+            () => syncCurrentPlayerPosition(),
+            10000
+          );
+        },
+        options
       );
     };
 
     syncCurrentPlayerPosition();
+    startLocationWatch(GEOLOCATION_OPTIONS);
 
-    const watchId = navigator.geolocation.watchPosition(
-      (pos) => {
-        const position = {
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude
-        };
-        savePosition(position);
-      },
-      handleLocationError,
-      GEOLOCATION_OPTIONS
-    );
-
-    return () => navigator.geolocation.clearWatch(watchId);
+    return () => {
+      if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+      clearTimeout(locationRetryTimerRef.current);
+    };
   }, [gameId, playerId, locationRetry]);
 
-  // Gestion du décompte du Timer
+  // Décompte basé sur l'heure de début enregistrée en base
   useEffect(() => {
     if (!gameStartedAt) return undefined;
 
@@ -476,7 +587,7 @@ export default function CatGameView({ code }) {
     };
   }, [gameStartedAt]);
 
-  // Formater le temps restant (MM:SS)
+  // Format MM:SS
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
@@ -489,12 +600,18 @@ export default function CatGameView({ code }) {
         return false;
       }
 
-      return getDistanceInMeters(
+      const reportedDistance = getDistanceInMeters(
         playerPosition.lat,
         playerPosition.lng,
         player.lat,
         player.lng
-      ) <= CATCH_RADIUS_METERS;
+      );
+      const locationUncertainty = Math.min(
+        25,
+        Math.max(playerPosition.accuracy_m || 0, player.accuracy_m || 0)
+      );
+
+      return reportedDistance <= CATCH_RADIUS_METERS + locationUncertainty;
     })
     : null;
 
@@ -508,7 +625,11 @@ export default function CatGameView({ code }) {
       player.lng
     );
 
-    if (distance > CATCH_RADIUS_METERS) return;
+    const locationUncertainty = Math.min(
+      25,
+      Math.max(playerPosition.accuracy_m || 0, player.accuracy_m || 0)
+    );
+    if (distance > CATCH_RADIUS_METERS + locationUncertainty) return;
 
     setIsCatching(true);
     const { data: caughtPlayer, error } = await supabase
@@ -604,17 +725,6 @@ export default function CatGameView({ code }) {
           />
         )}
 
-        {currentRole === 'cat' && (
-          <>
-            <Marker position={[catPosition.lat, catPosition.lng]} icon={catIcon} interactive={false} />
-            <Circle
-              center={[catPosition.lat, catPosition.lng]}
-              radius={5}
-              pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.15 }}
-            />
-          </>
-        )}
-
         <RecenterOnPlayer position={playerPosition} />
 
         {markedPlayers.map((player) => (
@@ -630,7 +740,7 @@ export default function CatGameView({ code }) {
 
       <div className="game-map-player-panel">
         <div className="game-map-player-list">
-          {players.map((player) => {
+          {players.filter((player) => player.id !== playerId).map((player) => {
             const hasPosition = player.lat != null && player.lng != null;
             const distance = hasPosition
               ? getDistanceInMeters(catPosition.lat, catPosition.lng, player.lat, player.lng)

@@ -21,7 +21,7 @@ export default function JoinParty() {
         setLoading(true);
         setError('');
 
-        // Vérifie que la partie existe et attend encore des joueurs car sinon on pourrait avoir des joueurs qui join en cours de partie
+        // Vérifie que la partie existe avant de traiter une reconnexion ou une nouvelle inscription.
         const { data: game, error: gameError } = await supabase
             .from('games')
             .select('id, code, status')
@@ -33,21 +33,37 @@ export default function JoinParty() {
             return setLoading(false);
         }
 
-        if (game.status !== 'waiting') {
-            setError('This game has already started.');
-            return setLoading(false);
-        }
-
-        // Un pseudo ne peut être utilisé qu'une fois dans une partie
-        const { data: existing } = await supabase
+        const { data: existing, error: existingError } = await supabase
             .from('players')
-            .select('id')
+            .select('id, name')
             .eq('game_id', game.id)
             .ilike('name', playerName)
             .maybeSingle();
 
+        if (existingError) {
+            console.error('Checking existing player:', existingError);
+            setError('Unable to check the player.');
+            return setLoading(false);
+        }
+
         if (existing) {
-            setError('This username is already in use in this game.');
+            if (game.status === 'playing') {
+                sessionStorage.setItem('hunterzone_player_id', existing.id);
+                sessionStorage.setItem('hunterzone_game_id', game.id);
+                router.push(`/partie?code=${game.code}`);
+                return;
+            }
+
+            if (game.status === 'finished') {
+                setError('This game has ended.');
+            } else {
+                setError('This username is already in use in this game.');
+            }
+            return setLoading(false);
+        }
+
+        if (game.status !== 'waiting') {
+            setError('This game has already started.');
             return setLoading(false);
         }
 

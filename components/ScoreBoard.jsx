@@ -1,4 +1,4 @@
-import { Avatar } from '@dicebear/core';
+import { Avatar, Style } from '@dicebear/core';
 import initialFace from '@dicebear/styles/initial-face.json' with { type: 'json' };
 import crownIcon from '../assets/icons/crown.svg';
 
@@ -16,7 +16,7 @@ export function getAvatarColor(player) {
 }
 
 export function getAvatarDataUri(player) {
-    return new Avatar(initialFace, {
+    return new Avatar(new Style(initialFace), {
         backgroundColor: [getAvatarColor(player)],
         seed: player.name,
     }).toDataUri();

@@ -64,7 +64,7 @@ async function fetchPlayers(gameId) {
 
 function createPulseIcon(player, role) {
   const avatar = getAvatarDataUri(player);
-  const color = role === 'cat' ? '#f97316' : '#60a5fa';
+  const color = '#565968';
 
   return L.divIcon({
     html: `
@@ -111,11 +111,14 @@ export default function CatGameView({ code }) {
   const [locationError, setLocationError] = useState(false);
   const [locationErrorCode, setLocationErrorCode] = useState(null);
   const [locationRetry, setLocationRetry] = useState(0);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatDraft, setChatDraft] = useState('');
   const hasEndedRef = useRef(false);
   const zoneCenterRef = useRef(null);
   const zoneWarningTimerRef = useRef(null);
   const zoneCountdownTimerRef = useRef(null);
   const locationRetryTimerRef = useRef(null);
+  const chatChannelRef = useRef(null);
 
   const [players, setPlayers] = useState([]);
   const [gameId, setGameId] = useState(null);
@@ -281,6 +284,10 @@ export default function CatGameView({ code }) {
 
     const channel = supabase
       .channel(`map-${gameId}`)
+      .on('broadcast', { event: 'chat-message' }, ({ payload }) => {
+        if (!payload?.text || !payload?.alias) return;
+        setChatMessages((messages) => [...messages.slice(-3), payload]);
+      })
       .on('postgres_changes', {
         event: '*', schema: 'public', table: 'players', filter: `game_id=eq.${gameId}`
       }, async () => {
@@ -316,6 +323,7 @@ export default function CatGameView({ code }) {
         }
       })
       .subscribe();
+    chatChannelRef.current = channel;
 
     const refreshInterval = setInterval(refreshPlayers, 5000);
 
@@ -325,6 +333,7 @@ export default function CatGameView({ code }) {
       document.removeEventListener('visibilitychange', onVisibilityChange);
       clearInterval(refreshInterval);
       supabase.removeChannel(channel);
+      chatChannelRef.current = null;
     };
   }, [gameId, playerId]);
 
@@ -652,6 +661,30 @@ export default function CatGameView({ code }) {
     setIsCatching(false);
   };
 
+  const sendChatMessage = async (event) => {
+    event.preventDefault();
+    const text = chatDraft.trim();
+    if (!text || !chatChannelRef.current) return;
+
+    const aliasKey = `hunterzone_chat_alias_${gameId}`;
+    const alias = sessionStorage.getItem(aliasKey) || `Player ${Math.floor(100 + Math.random() * 900)}`;
+    sessionStorage.setItem(aliasKey, alias);
+    const message = { alias, text: text.slice(0, 160), sentAt: Date.now() };
+    setChatMessages((messages) => [...messages.slice(-3), message]);
+    setChatDraft('');
+
+    const { error } = await chatChannelRef.current.send({
+      type: 'broadcast',
+      event: 'chat-message',
+      payload: message,
+    });
+
+    if (error) {
+      console.error('Chat send:', error);
+      return;
+    }
+  };
+
   const markedPlayers = players.filter((player) => player.lat != null && player.lng != null);
   const mapCenter = playerPosition ?? catPosition;
   const roleIcon = currentRole === 'cat' ? (Cat.src || Cat) : (MouseStyle.src || MouseStyle);
@@ -700,6 +733,28 @@ export default function CatGameView({ code }) {
           </button>
         </div>
       )}
+
+      <section className="game-map-chat" aria-label="Anonymous game chat">
+        <div className="game-map-chat-messages" aria-live="polite">
+          {chatMessages.length === 0 && <span className="game-map-chat-empty">Anonymous chat</span>}
+          {chatMessages.map((message, index) => (
+            <div className="game-map-chat-message" key={`${message.sentAt}-${index}`}>
+              <strong>{message.alias}</strong>
+              <span>{message.text}</span>
+            </div>
+          ))}
+        </div>
+        <form className="game-map-chat-form" onSubmit={sendChatMessage}>
+          <input
+            value={chatDraft}
+            onChange={(event) => setChatDraft(event.target.value)}
+            placeholder="Write a message..."
+            maxLength={160}
+            aria-label="Message"
+          />
+          <button type="submit" aria-label="Send message">Send</button>
+        </form>
+      </section>
 
       <MapContainer
         center={[mapCenter.lat, mapCenter.lng]}

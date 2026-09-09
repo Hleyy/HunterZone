@@ -86,20 +86,21 @@
 
 .game-map-catch-action {
   position: absolute;
-  bottom: 24px;
+  top: 50%;
   left: 50%;
-  z-index: 1000;
-  min-width: 190px;
-  padding: 12px 18px;
-  transform: translateX(-50%);
+  z-index: 3000;
+  isolation: isolate;
+  min-width: min(320px, calc(100% - 32px));
+  padding: 20px 28px;
+  transform: translate(-50%, -50%);
   color: #fff;
   background: var(--game-timer-background);
-  border: 2px solid rgba(255, 255, 255, 0.9);
-  border-radius: 12px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.3);
   cursor: pointer;
   font-family: var(--button-font);
-  font-size: 1rem;
+  font-size: 1.35rem;
   font-weight: 700;
 }
 
@@ -164,6 +165,78 @@
 .game-map-location-warning button {
   padding: 7px 12px;
   color: #565968;
+  background: #fff;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.game-map-chat {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  z-index: 1000;
+  display: flex;
+  width: min(360px, calc(100% - 248px));
+  padding: 10px;
+  flex-direction: column;
+  gap: 8px;
+  background: rgba(30, 30, 30, 0.94);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.24);
+}
+
+.game-map-chat-messages {
+  display: flex;
+  max-height: 116px;
+  overflow-y: auto;
+  flex-direction: column;
+  gap: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
+.game-map-chat-empty {
+  opacity: 0.75;
+  text-align: center;
+}
+
+.game-map-chat-message {
+  display: flex;
+  gap: 6px;
+  line-height: 1.25;
+}
+
+.game-map-chat-message strong {
+  flex-shrink: 0;
+  color: #fff;
+}
+
+.game-map-chat-message span {
+  overflow-wrap: anywhere;
+}
+
+.game-map-chat-form {
+  display: flex;
+  gap: 6px;
+}
+
+.game-map-chat-form input {
+  min-width: 0;
+  flex: 1;
+  padding: 8px 10px;
+  color: #1e1e1e;
+  background: #fff;
+  border: 0;
+  border-radius: 8px;
+  font: inherit;
+}
+
+.game-map-chat-form button {
+  padding: 8px 10px;
+  color: var(--game-interface-color);
   background: #fff;
   border: 0;
   border-radius: 8px;
@@ -309,6 +382,25 @@
 
   .game-map-timer {
     top: 42px;
+  }
+
+  .game-map-chat {
+    right: 8px;
+    bottom: 8px;
+    left: 8px;
+    width: auto;
+    max-height: 148px;
+    padding: 8px;
+  }
+
+  .game-map-chat-messages {
+    max-height: 64px;
+  }
+
+  .game-map-catch-action {
+    top: 50%;
+    min-width: min(300px, calc(100% - 32px));
+    padding: 18px 24px;
   }
 }
 

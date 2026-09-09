@@ -4,6 +4,9 @@ import Cat from '../assets/icons/Cat(Hunter).svg';
 import Mouse from '../assets/icons/mouse-style.svg';
 import { getAvatarDataUri } from '../components/ScoreBoard';
 import { supabase } from '../src/lib/supabase';
+import crownIconCat from '../assets/icons/crownWinnerCat.svg';
+import crownIconMouse from '../assets/icons/crownWinnerMouse.svg';
+
 
 export default function EndGame() {
 	const router = useRouter();
@@ -47,6 +50,7 @@ export default function EndGame() {
 
 	const currentPlayer = players.find((player) => player.id === playerId);
 	const playerWon = currentPlayer?.role === winner;
+	const winnerCrownIcon = currentPlayer?.role === 'cat' ? crownIconCat : crownIconMouse;
 
 	const returnHome = () => {
 		sessionStorage.removeItem('hunterzone_player_id');
@@ -69,11 +73,16 @@ export default function EndGame() {
 
 						return (
 							<div className="end-game-player" key={player.id}>
-								<img
-									className="end-game-player-avatar"
-									src={getAvatarDataUri(player)}
-									alt={player.name || `Player ${player.id}`}
-								/>
+								<span className="end-game-player-avatar-wrap">
+									<img
+										className="end-game-player-avatar"
+										src={getAvatarDataUri(player)}
+										alt={player.name || `Player ${player.id}`}
+									/>
+									{player.role === winner && (
+										<img className="crown" src={winnerCrownIcon.src || winnerCrownIcon} alt="Winner" />
+									)}
+								</span>
 								<span className="end-game-player-name">
 									{player.name || `Joueur ${player.id}`}
 								</span>

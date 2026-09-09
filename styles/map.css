@@ -86,7 +86,7 @@
 
 .game-map-catch-action {
   position: absolute;
-  top: 50%;
+  bottom: 70px;
   left: 50%;
   z-index: 3000;
   isolation: isolate;
@@ -398,7 +398,7 @@
   }
 
   .game-map-catch-action {
-    top: 50%;
+    bottom: 70px;
     min-width: min(300px, calc(100% - 32px));
     padding: 18px 24px;
   }
@@ -483,6 +483,24 @@
   flex-shrink: 0;
   border: 2px solid rgba(30, 30, 30, 0.12);
   border-radius: 50%;
+}
+
+.end-game-player-avatar-wrap {
+  display: block;
+  position: relative;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.end-game-player-avatar-wrap .crown {
+  position: absolute;
+  top: -18px;
+  right: -6px;
+  width: 24px;
+  height: 24px;
+  z-index: 1;
+  transform: rotate(12deg);
 }
 
 .end-game-player-name {

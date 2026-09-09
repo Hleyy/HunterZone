@@ -121,7 +121,7 @@
 }
 
 .home-form-panel form p {
-	color: #fff;
+	color: var(--paper);
 	font-size: 0.875rem;
 	margin: 0;
 	text-align: center;

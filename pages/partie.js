@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../src/lib/supabase';
+import { getClientPlayerId } from '../src/lib/playerSession';
 
 export default function Partie() {
     const router = useRouter();
@@ -11,7 +12,7 @@ export default function Partie() {
         if (!router.isReady || !code) return;
 
         async function loadRole() {
-            const playerId = Number(sessionStorage.getItem('hunterzone_player_id'));
+            const playerId = getClientPlayerId();
             const { data: game } = await supabase.from('games').select('id').eq('code', code).single();
             const { data: player } = await supabase.from('players').select('role').eq('id', playerId).eq('game_id', game.id).single();
             setRole(player?.role);
@@ -38,7 +39,7 @@ export default function Partie() {
                     {isCat ? "Meow! 🐱 You're the Cat this round." : "Squeak! 🐭 You're the Mouse this round."}
                 </p>
                 <button className="role-action" onClick={() => router.replace(`/map?code=${code}`)}>
-                    {isCat ? "Run" : "Run"}
+                    Run
                 </button>
             </section>
         </main>

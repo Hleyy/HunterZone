@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 
 import { supabase } from '../src/lib/supabase';
+import { clearPlayerSession, getClientPlayerId } from '../src/lib/playerSession';
 import Panel from '../components/Panel';
 import ScoreBoard from '../components/ScoreBoard';
 
@@ -23,10 +24,7 @@ export default function Lobby() {
 
     const code = router.query.code;
 
-    const playerId =
-        typeof window !== 'undefined'
-            ? Number(sessionStorage.getItem('hunterzone_player_id'))
-            : null;
+    const playerId = getClientPlayerId();
 
     const isHost = Number(party?.host_id) === playerId;
 
@@ -114,8 +112,7 @@ export default function Lobby() {
         }
     }
 
-    sessionStorage.removeItem('hunterzone_player_id');
-    sessionStorage.removeItem('hunterzone_game_id');
+    clearPlayerSession();
 
     router.push('/accueil');
 }

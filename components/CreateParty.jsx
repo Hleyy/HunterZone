@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../src/lib/supabase';
+import { setPlayerSession } from '../src/lib/playerSession';
 
 export default function CreateParty() {
     const router = useRouter();
@@ -8,6 +9,10 @@ export default function CreateParty() {
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Crée une nouvelle partie et son joueur hôte, puis redirige vers le lobby.
+     * @param {React.FormEvent} e Événement de soumission du formulaire, utilisé pour empêcher le rechargement de la page.
+     */
     async function create(e) {
         e.preventDefault();
         const playerName = name.trim();
@@ -50,8 +55,7 @@ export default function CreateParty() {
             .update({ host_id: player.id })
             .eq('id', game.id);
 
-        sessionStorage.setItem('hunterzone_player_id', player.id);
-        sessionStorage.setItem('hunterzone_game_id', game.id);
+        setPlayerSession(player.id, game.id);
 
         router.push(`/lobby?code=${code}`);
     }

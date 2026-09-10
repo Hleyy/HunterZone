@@ -10,9 +10,9 @@ app.prepare().then(() => {
   http.createServer((request, response) => {
     handle(request, response, parse(request.url, true));
   }).listen(port, () => {
-    console.log(`HunterZone listening on port ${port}`);
+    console.log(`HunterZone écoute sur le port ${port}`);
   });
 }).catch((error) => {
-  console.error('Failed to start HunterZone:', error);
+  console.error('Impossible de démarrer HunterZone :', error);
   process.exit(1);
 });

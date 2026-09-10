@@ -11,12 +11,22 @@ const avatarColors = [
     '#f7aef8', '#f7d488', '#c1fba4', '#a9def9', '#e4c1f9',
 ];
 
+/**
+ * Choisit une couleur d'avatar à partir de l'id et du nom du joueur.
+ * @param {{ id: string|number, name: string }} player Joueur utilisé pour dériver la couleur.
+ * @returns {string} Une couleur hexadécimale issue de la palette partagée (avatarColors).
+ */
 export function getAvatarColor(player) {
     const seed = `${player.id}-${player.name}`;
     const value = [...seed].reduce((total, character) => total + character.charCodeAt(0), 0);
     return avatarColors[value % avatarColors.length];
 }
 
+/**
+ * Génère un avatar Dicebear pour un joueur sous forme de data URI.
+ * @param {{ id: string|number, name: string }} player Joueur pour lequel générer l'avatar.
+ * @returns {string} Data URI de l'avatar généré.
+ */
 export function getAvatarDataUri(player) {
     return new Avatar(new Style(initialFace), {
         backgroundColor: [getAvatarColor(player)],

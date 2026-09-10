@@ -7,29 +7,37 @@ import MouseStyle from '../assets/icons/mouse-style.svg';
 import HandIcon from '../assets/icons/hand.svg';
 import { getAvatarDataUri } from './ScoreBoard';
 import { recordCaughtMouse, recordLocalWin } from '../src/lib/localProfile';
+import { getClientPlayerId } from '../src/lib/playerSession';
 import { supabase } from '../src/lib/supabase';
 
-const GAME_DURATION_SECONDS = 600;
-const CATCH_RADIUS_METERS = 10;
-const SAFE_ZONE_RADIUS_METERS = 500;
-const ZONE_WARNING_SECONDS = 5;
-const GEOLOCATION_OPTIONS = {
+const GAME_DURATION_SECONDS = 600; // Durée du jeu
+const CATCH_RADIUS_METERS = 10; // Rayon de capture en mètres pour le chat
+const SAFE_ZONE_RADIUS_METERS = 500; // Rayon pour pas que les souris dépassent les limites du jeu
+const ZONE_WARNING_SECONDS = 5; // Cooldown pour l'avertissement de sortie des limites du jeu
+const GEOLOCATION_OPTIONS = { // Options pour les requêttes haute précision
   enableHighAccuracy: true,
   timeout: 60000,
   maximumAge: 0,
 };
-const GEOLOCATION_FALLBACK_OPTIONS = {
+const GEOLOCATION_FALLBACK_OPTIONS = { // Options pour les requêtes basses précisions
   enableHighAccuracy: false,
   timeout: 15000,
   maximumAge: 30000,
 };
 
-const PLAYER_HEARTBEAT_MS = 5000;
+const PLAYER_HEARTBEAT_MS = 5000; // 
 const INACTIVE_PLAYER_TIMEOUT_MS = 10 * 60 * 1000;
 const PLAYER_FIELDS = 'id, name, role, lat, lng, accuracy_m, is_found, game_id';
 
+/**
+ * Calcule la distance de Haversine entre deux coordonnées GPS.
+ * @param {number} lat1 Latitude du premier point.
+ * @param {number} lon1 Longitude du premier point.
+ * @param {number} lat2 Latitude du second point.
+ * @param {number} lon2 Longitude du second point.
+ * @returns {number} Distance en mètres, arrondie à l'entier le plus proche.
+ */
 function getDistanceInMeters(lat1, lon1, lat2, lon2) {
-  // Distance Haversine, adaptée aux courtes distances GPS.
   const R = 6371000;
   const dLat = (lat2 - lat1) * (Math.PI / 180);
   const dLon = (lon2 - lon1) * (Math.PI / 180);
@@ -41,6 +49,14 @@ function getDistanceInMeters(lat1, lon1, lat2, lon2) {
   return Math.round(R * c);
 }
 
+/**
+ * Calcule le cap (bearing) d'une coordonnée GPS vers une autre.
+ * @param {number} lat1 Latitude du point d'origine.
+ * @param {number} lon1 Longitude du point d'origine.
+ * @param {number} lat2 Latitude du point cible.
+ * @param {number} lon2 Longitude du point cible.
+ * @returns {number} Cap en degrés, normalisé entre 0 et 360.
+ */
 function getBearingAngle(lat1, lon1, lat2, lon2) {
   const y = Math.sin((lon2 - lon1) * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180));
   const x =
@@ -49,6 +65,11 @@ function getBearingAngle(lat1, lon1, lat2, lon2) {
   return ((Math.atan2(y, x) * (180 / Math.PI)) + 360) % 360;
 }
 
+/**
+ * Formate une distance en mètres en un libellé lisible (m ou km).
+ * @param {number} distanceInMeters Distance à formater.
+ * @returns {string} Libellé formaté, par exemple "120 m" ou "1.2 km".
+ */
 function getDistanceLabel(distanceInMeters) {
   if (distanceInMeters >= 1000) {
     return `${(distanceInMeters / 1000).toFixed(1)} km`;
@@ -56,6 +77,21 @@ function getDistanceLabel(distanceInMeters) {
   return `${distanceInMeters} m`;
 }
 
+/**
+ * Calcule la marge d'incertitude à ajouter au rayon de capture, plafonnée à 25 m.
+ * @param {number} accuracy1 Précision GPS du premier point (en mètres).
+ * @param {number} accuracy2 Précision GPS du second point (en mètres).
+ * @returns {number} Marge d'incertitude en mètres.
+ */
+function getLocationUncertainty(accuracy1, accuracy2) {
+  return Math.min(25, Math.max(accuracy1 || 0, accuracy2 || 0));
+}
+
+/**
+ * Récupère tous les joueurs d'une partie donnée depuis Supabase.
+ * @param {string|number} gameId Identifiant de la partie dont on récupère les joueurs.
+ * @returns {Promise<import('@supabase/supabase-js').PostgrestSingleResponse<any>>} Résultat de la requête Supabase.
+ */
 async function fetchPlayers(gameId) {
   return supabase
     .from('players')
@@ -63,6 +99,12 @@ async function fetchPlayers(gameId) {
     .eq('game_id', gameId);
 }
 
+/**
+ * Construit une icône Leaflet (divIcon) affichant l'avatar d'un joueur avec un effet de pulsation.
+ * @param {{ id: string|number, name: string }} player Joueur à afficher sur la carte.
+ * @param {string} role Rôle du joueur ("cat" ou "mouse"), actuellement inutilisé pour le style.
+ * @returns {L.DivIcon} Icône Leaflet prête à être utilisée sur un Marker.
+ */
 function createPulseIcon(player, role) {
   const avatar = getAvatarDataUri(player);
   const color = '#565968';
@@ -124,11 +166,13 @@ export default function CatGameView({ code }) {
   const [players, setPlayers] = useState([]);
   const [gameId, setGameId] = useState(null);
   const [gameStartedAt, setGameStartedAt] = useState(null);
-  const playerId = typeof window !== 'undefined'
-    ? Number(sessionStorage.getItem('hunterzone_player_id'))
-    : null;
+  const playerId = getClientPlayerId();
 
-  // La première position valide du chat devient le centre partagé de la zone
+  /**
+   * Définit une seule fois le centre partagé de la zone sûre, à partir de la première position du chat.
+   * @param {{ lat: number, lng: number }} position Position candidate pour le centre.
+   * @param {string|number} [gameIdentifier] Partie à mettre à jour
+   */
   const updateZoneCenter = (position, gameIdentifier = gameId) => {
     if (!position || zoneCenterRef.current || !gameIdentifier) return;
 
@@ -338,6 +382,10 @@ export default function CatGameView({ code }) {
     };
   }, [gameId, playerId]);
 
+  /**
+   * Termine la partie en cours avec le rôle gagnant indiqué, si elle n'est pas déjà terminée.
+   * @param {'cat'|'mouse'} winner Rôle qui a gagné la partie.
+   */
   const finishGame = async (winner) => {
     if (!gameId || hasEndedRef.current) return;
 
@@ -359,7 +407,10 @@ export default function CatGameView({ code }) {
     if (data?.winner) setGameWinner(data.winner);
   };
 
-  // Chaque client vérifie cela pour terminer la partie partout après une capture ou une élimination
+  /**
+   * Termine la partie et fait gagner le chat une fois que toutes les souris ont été capturées ou éliminées.
+   * Chaque client exécute cette vérification après une capture ou une élimination de zone.
+   */
   const checkAllMiceCaptured = async () => {
     if (!gameId || gameWinner) return;
 
@@ -379,6 +430,9 @@ export default function CatGameView({ code }) {
     }
   };
 
+  /**
+   * Élimine la souris actuelle pour être restée trop longtemps hors des limites du jeu.
+   */
   const eliminatePlayerOutsideZone = async () => {
     if (!playerId || !gameId || currentRole !== 'mouse' || gameWinner) return;
 
@@ -399,7 +453,7 @@ export default function CatGameView({ code }) {
   };
 
   useEffect(() => {
-    // La souris dispose de cinq secondes pour revenir dans la zone partagée
+    // La souris dispose de cinq secondes pour revenir dans la zone de jeu
     if (currentRole !== 'mouse' || !playerPosition || !zoneCenter || gameWinner) {
       setIsInRestrictedZone(false);
       clearTimeout(zoneWarningTimerRef.current);
@@ -598,7 +652,11 @@ export default function CatGameView({ code }) {
     };
   }, [gameStartedAt]);
 
-  // Format MM:SS
+  /**
+   * Formate une durée en secondes sous la forme MM:SS.
+   * @param {number} seconds Durée à formater.
+   * @returns {string} Temps formaté, par exemple "09:05".
+   */
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60).toString().padStart(2, '0');
     const s = (seconds % 60).toString().padStart(2, '0');
@@ -617,15 +675,16 @@ export default function CatGameView({ code }) {
         player.lat,
         player.lng
       );
-      const locationUncertainty = Math.min(
-        25,
-        Math.max(playerPosition.accuracy_m || 0, player.accuracy_m || 0)
-      );
+      const locationUncertainty = getLocationUncertainty(playerPosition.accuracy_m, player.accuracy_m);
 
       return reportedDistance <= CATCH_RADIUS_METERS + locationUncertainty;
     })
     : null;
 
+  /**
+   * Tente de capturer une souris si elle se trouve dans le rayon de capture.
+   * @param {{ id: string|number, lat: number, lng: number, accuracy_m?: number }} player Joueur souris à capturer.
+   */
   const catchPlayer = async (player) => {
     if (!player || !gameId || !playerPosition || isCatching || gameWinner) return;
 
@@ -636,10 +695,7 @@ export default function CatGameView({ code }) {
       player.lng
     );
 
-    const locationUncertainty = Math.min(
-      25,
-      Math.max(playerPosition.accuracy_m || 0, player.accuracy_m || 0)
-    );
+    const locationUncertainty = getLocationUncertainty(playerPosition.accuracy_m, player.accuracy_m);
     if (distance > CATCH_RADIUS_METERS + locationUncertainty) return;
 
     setIsCatching(true);
@@ -666,6 +722,10 @@ export default function CatGameView({ code }) {
     setIsCatching(false);
   };
 
+  /**
+   * Envoie le brouillon de message de chat en diffusion aux autres joueurs de la partie.
+   * @param {React.FormEvent} event Événement de soumission du formulaire, utilisé pour empêcher le rechargement de la page.
+   */
   const sendChatMessage = async (event) => {
     event.preventDefault();
     const text = chatDraft.trim();
@@ -730,7 +790,7 @@ export default function CatGameView({ code }) {
           <strong>{locationErrorCode === 2 ? 'Desktop location unavailable' : 'Location unavailable'}</strong>
           <span>
             {locationErrorCode === 2
-              ? 'Enable location services for your browser, or use a phone with GPS.'
+              ? 'Enable location services for your browser or use a phone with GPS.'
               : 'Allow location access, then try again.'}
           </span>
           <button type="button" onClick={() => setLocationRetry((retry) => retry + 1)}>

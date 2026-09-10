@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { supabase } from '../src/lib/supabase';
+import { setPlayerSession } from '../src/lib/playerSession';
 
 export default function JoinParty() {
     const router = useRouter();
@@ -19,6 +20,10 @@ export default function JoinParty() {
         if (invitedCode) setCode(invitedCode);
     }, [router.isReady, router.query.code]);
 
+    /**
+     * Rejoint une partie existante : reconnecte un joueur existant ou en crée un nouveau, puis redirige.
+     * @param {React.FormEvent} e Événement de soumission du formulaire, utilisé pour empêcher le rechargement de la page.
+     */
     async function join(e) {
         e.preventDefault();
 
@@ -58,8 +63,7 @@ export default function JoinParty() {
 
         if (existing) {
             if (game.status === 'playing') {
-                sessionStorage.setItem('hunterzone_player_id', existing.id);
-                sessionStorage.setItem('hunterzone_game_id', game.id);
+                setPlayerSession(existing.id, game.id);
                 router.push(`/partie?code=${game.code}`);
                 return;
             }
@@ -90,8 +94,7 @@ export default function JoinParty() {
             return setLoading(false);
         }
 
-        sessionStorage.setItem('hunterzone_player_id', player.id);
-        sessionStorage.setItem('hunterzone_game_id', game.id);
+        setPlayerSession(player.id, game.id);
 
         router.push(`/lobby?code=${game.code}`);
     }

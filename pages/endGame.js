@@ -4,6 +4,7 @@ import Cat from '../assets/icons/Cat(Hunter).svg';
 import Mouse from '../assets/icons/mouse-style.svg';
 import { getAvatarDataUri } from '../components/ScoreBoard';
 import { supabase } from '../src/lib/supabase';
+import { clearPlayerSession, getClientPlayerId } from '../src/lib/playerSession';
 import crownIconCat from '../assets/icons/crownWinnerCat.svg';
 import crownIconMouse from '../assets/icons/crownWinnerMouse.svg';
 
@@ -12,9 +13,7 @@ export default function EndGame() {
 	const router = useRouter();
 	const [players, setPlayers] = useState([]);
 	const winner = router.query.winner;
-	const playerId = typeof window !== 'undefined'
-		? Number(sessionStorage.getItem('hunterzone_player_id'))
-		: null;
+	const playerId = getClientPlayerId();
 
 	useEffect(() => {
 		if (!router.isReady || !router.query.code) return;
@@ -53,8 +52,7 @@ export default function EndGame() {
 	const winnerCrownIcon = currentPlayer?.role === 'cat' ? crownIconCat : crownIconMouse;
 
 	const returnHome = () => {
-		sessionStorage.removeItem('hunterzone_player_id');
-		sessionStorage.removeItem('hunterzone_game_id');
+		clearPlayerSession();
 		router.replace('/accueil');
 	};
 

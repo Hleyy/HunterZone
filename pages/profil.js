@@ -18,11 +18,11 @@ export default function Profil() {
 				<dl className="profile-stats">
 					<div className="profile-stat">
 						<dt>Wins</dt>
-						<dd>{stats.wins}</dd>
+						<dd>{stats.wins} 🏆</dd>
 					</div>
 					<div className="profile-stat">
 						<dt>Mice caught</dt>
-						<dd>{stats.miceCaught}</dd>
+						<dd>{stats.miceCaught} 🐭</dd>
 					</div>
 				</dl>
 				<button className="home-back-button" type="button" onClick={() => router.push('/accueil')}>

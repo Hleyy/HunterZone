@@ -1,3 +1,19 @@
+@keyframes home-panel-in {
+	from { opacity: 0; transform: translateY(1.5rem) scale(.97); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes home-title-pop {
+	0% { opacity: 0; transform: scale(.8) translateY(-.5rem); }
+	60% { opacity: 1; transform: scale(1.05) translateY(0); }
+	100% { transform: scale(1); }
+}
+
+@keyframes home-item-in {
+	from { opacity: 0; transform: translateY(.75rem); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
 .home-page,
 .home-panel {
 	align-items: center;
@@ -12,6 +28,7 @@
 }
 
 .home-panel {
+	animation: home-panel-in .5s cubic-bezier(.22, 1, .36, 1) both;
 	background: #fff;
 	border-radius: 1.5rem;
 	flex-direction: column;
@@ -23,6 +40,7 @@
 }
 
 .home-panel h1 {
+	animation: home-title-pop .6s .1s cubic-bezier(.22, 1, .36, 1) both;
 	color: var(--paper);
 	font-family: var(--title-font);
 	font-size: clamp(2rem, 8vw, 2.75rem);
@@ -44,6 +62,19 @@
 	gap: 0.75rem;
 }
 
+.home-actions > *,
+.home-form-panel > * {
+	animation: home-item-in .45s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+.home-actions > *:nth-child(1) { animation-delay: .15s; }
+.home-actions > *:nth-child(2) { animation-delay: .25s; }
+.home-actions > *:nth-child(3) { animation-delay: .35s; }
+
+.home-form-panel > *:nth-child(1) { animation-delay: .05s; }
+.home-form-panel > *:nth-child(2) { animation-delay: .12s; }
+.home-form-panel > *:nth-child(3) { animation-delay: .19s; }
+
 .home-button,
 .home-back-button,
 .home-form-panel form button {
@@ -54,7 +85,7 @@
 	font-size: 1rem;
 	font-weight: 600;
 	padding: 0.9rem 1.4rem;
-	transition: transform .2s, filter .2s;
+	transition: transform .2s, filter .2s, box-shadow .2s;
 }
 
 .home-button:hover,
@@ -63,9 +94,20 @@
 	transform: translateY(-0.125rem);
 }
 
+.home-button:active,
+.home-back-button:active {
+	transform: translateY(0) scale(.97);
+}
+
 .home-button-primary {
+	animation: home-item-in .45s .15s cubic-bezier(.22, 1, .36, 1) both, home-pulse 2.4s ease-in-out 1.2s infinite;
 	background: var(--dark-blue);
 	color: #fff;
+}
+
+@keyframes home-pulse {
+	0%, 100% { box-shadow: 0 0 0 0 rgba(86, 89, 104, .35); }
+	50% { box-shadow: 0 0 0 .5rem rgba(86, 89, 104, 0); }
 }
 
 .home-button-secondary {
